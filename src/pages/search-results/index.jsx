@@ -10,7 +10,7 @@ import SearchProductCard from './components/SearchProductCard';
 import SearchSuggestions from './components/SearchSuggestions';
 import ActiveFilters from './components/ActiveFilters';
 import NoResults from './components/NoResults';
-
+import Footer from '../../components/ui/Footer';
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -239,7 +239,7 @@ const SearchResults = () => {
             <form onSubmit={handleSearch} className="relative">
               <Input
                 type="search"
-                placeholder="Search for fresh groceries..."
+                placeholder="Search for Products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}

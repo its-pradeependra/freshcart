@@ -1,22 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Image from '../../../components/AppImage';
 import Button from '../../../components/ui/Button';
+import { useAuth } from '../../../contexts/AuthContext';
 
-const ProductCard = ({ product, onAddToCart, onAddToWishlist }) => {
-  const [isWishlisted, setIsWishlisted] = useState(product.isWishlisted || false);
+const ProductCard = ({ product }) => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const { addToCart, addToWishlist, removeFromWishlist, wishlist } = useAuth();
+  
+  // Check if product is in wishlist
+  const isInWishlist = wishlist.some(item => item.id === product.id);
+  const [isWishlisted, setIsWishlisted] = useState(isInWishlist);
+  
+  // Update wishlist state when wishlist changes
+  useEffect(() => {
+    setIsWishlisted(wishlist.some(item => item.id === product.id));
+  }, [wishlist, product.id]);
 
   const handleAddToCart = async () => {
     setIsAddingToCart(true);
-    await onAddToCart(product);
-    setIsAddingToCart(false);
+    try {
+      addToCart(product, 1);
+      // Show success feedback (could add a toast notification here)
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    } finally {
+      setIsAddingToCart(false);
+    }
   };
 
   const handleWishlistToggle = () => {
-    setIsWishlisted(!isWishlisted);
-    onAddToWishlist(product, !isWishlisted);
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
   };
 
   const renderStars = (rating) => {
@@ -41,7 +60,7 @@ const ProductCard = ({ product, onAddToCart, onAddToWishlist }) => {
   };
 
   return (
-    <div className="bg-surface border border-border rounded-card shadow-card hover:shadow-modal transition-smooth group">
+    <div className="bg-surface border border-border rounded-card shadow-card hover:shadow-modal transition-smooth group flex flex-col min-h-[420px]">
       <div className="relative overflow-hidden">
         <Link to={`/product-details?id=${product.id}`}>
           <div className="aspect-square overflow-hidden rounded-t-card">
@@ -85,7 +104,7 @@ const ProductCard = ({ product, onAddToCart, onAddToWishlist }) => {
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-4 flex flex-col flex-1">
         <Link to={`/product-details?id=${product.id}`}>
           <h3 className="font-body font-body-medium text-text-primary mb-2 line-clamp-2 hover:text-primary transition-smooth">
             {product.name}
@@ -115,7 +134,7 @@ const ProductCard = ({ product, onAddToCart, onAddToWishlist }) => {
         <div className="text-sm text-text-secondary mb-3 font-caption">
           {product.unit}
         </div>
-
+        <div className="flex-1" />
         <Button
           variant={product.inStock ? "primary" : "outline"}
           fullWidth

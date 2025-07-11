@@ -9,7 +9,7 @@ import PaymentMethodSection from './components/PaymentMethodSection';
 import OrderSummary from './components/OrderSummary';
 import DeliveryInstructions from './components/DeliveryInstructions';
 import PlaceOrderSection from './components/PlaceOrderSection';
-
+import Footer from '../../components/ui/Footer';
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
@@ -195,6 +195,9 @@ const CheckoutPage = () => {
         {/* Mobile spacing for fixed button */}
         <div className="lg:hidden h-32"></div>
       </main>
+
+      <Footer />
+
     </div>
   );
 };

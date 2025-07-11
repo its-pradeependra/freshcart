@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
+import Footer from '../../components/ui/Footer';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
@@ -264,10 +265,10 @@ const WishlistSavedItems = () => {
   const currentWishlist = wishlists.find(w => w.id === selectedWishlist);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow">
         <Breadcrumb customItems={breadcrumbItems} />
         
         <div className="mt-6">
@@ -429,7 +430,9 @@ const WishlistSavedItems = () => {
             <RecentlyViewed onAddToCart={handleAddToCart} />
           </div>
         </div>
-      </div>
+      </main>
+      
+      <Footer />
     </div>
   );
 };

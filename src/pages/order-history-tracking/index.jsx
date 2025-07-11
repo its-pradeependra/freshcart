@@ -9,6 +9,7 @@ import HistoryOrderCard from './components/HistoryOrderCard';
 import OrderFilters from './components/OrderFilters';
 import FavoriteOrdersSection from './components/FavoriteOrdersSection';
 import OrderTrackingModal from './components/OrderTrackingModal';
+import Footer from '../../components/ui/Footer';
 
 const OrderHistoryTracking = () => {
   const navigate = useNavigate();
@@ -463,6 +464,7 @@ const OrderHistoryTracking = () => {
           </div>
         )}
       </main>
+      <Footer />
 
       {/* Order Tracking Modal */}
       <OrderTrackingModal

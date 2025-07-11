@@ -1,33 +1,53 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
-
 import Input from './Input';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cartItemCount] = useState(3); // This would come from cart context
-  const [isAuthenticated] = useState(true); // This would come from auth context
   
+  const { isAuthenticated, user, logout, cartItemCount, wishlistCount } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const searchRef = useRef(null);
   const userDropdownRef = useRef(null);
 
   const navigationItems = [
     { name: 'Home', path: '/home-dashboard', icon: 'Home' },
     { name: 'Categories', path: '/product-categories-browse', icon: 'Grid3X3' },
-    { name: 'Cart', path: '/shopping-cart', icon: 'ShoppingCart' },
+    { name: 'Cart', path: '/shopping-cart', icon: 'ShoppingCart', count: cartItemCount },
     { name: 'Orders', path: '/order-history-tracking', icon: 'Package' },
+    { name: 'Wishlist', path: '/wishlist-saved-items', icon: 'Heart', count: wishlistCount },
   ];
 
   const userMenuItems = [
-    { name: 'Profile', icon: 'User', action: () => console.log('Profile') },
-    { name: 'Settings', icon: 'Settings', action: () => console.log('Settings') },
-    { name: 'Help', icon: 'HelpCircle', action: () => console.log('Help') },
-    { name: 'Logout', icon: 'LogOut', action: () => console.log('Logout') },
+    { 
+      name: 'Profile', 
+      icon: 'User', 
+      action: () => navigate('/user-profile-account-settings')
+    },
+    { 
+      name: 'Settings', 
+      icon: 'Settings', 
+      action: () => navigate('/user-profile-account-settings?section=preferences')
+    },
+    { 
+      name: 'Help', 
+      icon: 'HelpCircle', 
+      action: () => navigate('/help')
+    },
+    { 
+      name: 'Logout', 
+      icon: 'LogOut', 
+      action: () => {
+        logout();
+        setIsUserDropdownOpen(false);
+      }
+    },
   ];
 
   useEffect(() => {
@@ -47,8 +67,7 @@ const Header = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      console.log('Search for:', searchQuery);
-      // Navigate to search results or filter products
+      navigate(`/search-results?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -66,7 +85,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-nav-height-mobile lg:h-nav-height">
           
           {/* Logo */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-x-4">
             <Link to="/home-dashboard" className="flex items-center space-x-2 transition-smooth hover:opacity-80">
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <Icon name="ShoppingBag" size={20} color="white" />
@@ -78,7 +97,7 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center space-x-8">
+          <nav className="hidden lg:flex items-center space-x-8 ml-16">
             {navigationItems.map((item) => (
               <Link
                 key={item.path}
@@ -90,9 +109,9 @@ const Header = () => {
               >
                 <Icon name={item.icon} size={18} />
                 <span>{item.name}</span>
-                {item.name === 'Cart' && cartItemCount > 0 && (
+                {item.count > 0 && (
                   <span className="bg-accent text-accent-foreground text-xs font-data font-data-medium px-2 py-1 rounded-full min-w-[20px] text-center">
-                    {cartItemCount}
+                    {item.count}
                   </span>
                 )}
               </Link>
@@ -104,7 +123,7 @@ const Header = () => {
             <form onSubmit={handleSearchSubmit} className="relative w-full">
               <Input
                 type="search"
-                placeholder="Search for fresh groceries..."
+                placeholder="Search for Products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full"
@@ -142,14 +161,22 @@ const Header = () => {
             </Link>
 
             {/* User Account Dropdown */}
-            {isAuthenticated && (
+            {isAuthenticated ? (
               <div className="relative" ref={userDropdownRef}>
                 <button
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                   className="flex items-center space-x-2 p-2 text-text-primary hover:text-primary transition-smooth"
                 >
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                    <Icon name="User" size={16} color="white" />
+                    {user?.profileImage ? (
+                      <img
+                        src={user.profileImage}
+                        alt={user.name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <Icon name="User" size={16} color="white" />
+                    )}
                   </div>
                   <Icon name="ChevronDown" size={16} className="hidden sm:block" />
                 </button>
@@ -174,6 +201,14 @@ const Header = () => {
                   </div>
                 )}
               </div>
+            ) : (
+              <Link
+                to="/login"
+                className="flex items-center space-x-2 px-4 py-2 rounded-button text-sm font-body font-body-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-smooth"
+              >
+                <Icon name="LogIn" size={18} />
+                <span>Sign In</span>
+              </Link>
             )}
 
             {/* Mobile Menu Toggle */}
@@ -192,7 +227,7 @@ const Header = () => {
             <form onSubmit={handleSearchSubmit} className="relative">
               <Input
                 type="search"
-                placeholder="Search for fresh groceries..."
+                placeholder="Search for Products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2 w-full"
@@ -224,9 +259,9 @@ const Header = () => {
               >
                 <Icon name={item.icon} size={20} />
                 <span>{item.name}</span>
-                {item.name === 'Cart' && cartItemCount > 0 && (
+                {item.count > 0 && (
                   <span className="bg-accent text-accent-foreground text-xs font-data font-data-medium px-2 py-1 rounded-full min-w-[20px] text-center ml-auto">
-                    {cartItemCount}
+                    {item.count}
                   </span>
                 )}
               </Link>

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
+import { Routes as RouterRoutes, Route } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
 // Add your imports here
@@ -12,12 +12,14 @@ import Checkout from "pages/checkout";
 import UserProfileAccountSettings from "pages/user-profile-account-settings";
 import SearchResults from "pages/search-results";
 import WishlistSavedItems from "pages/wishlist-saved-items";
+import HelpPage from "pages/help";
+import SignIn from "pages/auth/SignIn";
+import SignUp from "pages/auth/SignUp";
 import NotFound from "pages/NotFound";
 
 const Routes = () => {
   return (
-    <BrowserRouter>
-      <ErrorBoundary>
+    <ErrorBoundary>
       <ScrollToTop />
       <RouterRoutes>
         {/* Define your routes here */}
@@ -31,10 +33,17 @@ const Routes = () => {
         <Route path="/user-profile-account-settings" element={<UserProfileAccountSettings />} />
         <Route path="/search-results" element={<SearchResults />} />
         <Route path="/wishlist-saved-items" element={<WishlistSavedItems />} />
+        <Route path="/help" element={<HelpPage />} />
+        
+        {/* Auth routes */}
+        <Route path="/auth/signin" element={<SignIn />} />
+        <Route path="/login" element={<SignIn />} />
+        <Route path="/auth/signup" element={<SignUp />} />
+        <Route path="/register" element={<SignUp />} />
+        
         <Route path="*" element={<NotFound />} />
       </RouterRoutes>
-      </ErrorBoundary>
-    </BrowserRouter>
+    </ErrorBoundary>
   );
 };
 

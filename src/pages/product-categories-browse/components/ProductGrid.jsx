@@ -3,10 +3,10 @@ import ProductCard from './ProductCard';
 import Icon from '../../../components/AppIcon';
 
 
-const ProductGrid = ({ products, onAddToCart, onAddToWishlist, loading }) => {
+const ProductGrid = ({ products, loading }) => {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
         {[...Array(20)].map((_, index) => (
           <div key={index} className="bg-surface border border-border rounded-card animate-pulse">
             <div className="aspect-square bg-border-light rounded-t-card"></div>
@@ -39,13 +39,11 @@ const ProductGrid = ({ products, onAddToCart, onAddToWishlist, loading }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
       {products.map((product) => (
         <ProductCard
           key={product.id}
           product={product}
-          onAddToCart={onAddToCart}
-          onAddToWishlist={onAddToWishlist}
         />
       ))}
     </div>

@@ -9,7 +9,7 @@ import ProductActions from './components/ProductActions';
 import ProductTabs from './components/ProductTabs';
 import RelatedProducts from './components/RelatedProducts';
 import CustomerReviews from './components/CustomerReviews';
-
+import Footer from '../../components/ui/Footer';
 const ProductDetails = () => {
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('id') || '1';
@@ -262,6 +262,7 @@ const ProductDetails = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

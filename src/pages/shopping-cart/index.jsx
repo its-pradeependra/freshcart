@@ -8,7 +8,7 @@ import PromoCodeInput from './components/PromoCodeInput';
 import EmptyCart from './components/EmptyCart';
 import RecentlyViewed from './components/RecentlyViewed';
 import MinimumOrderProgress from './components/MinimumOrderProgress';
-
+import Footer from '../../components/ui/Footer';
 const ShoppingCart = () => {
   const navigate = useNavigate();
   
@@ -240,6 +240,7 @@ const ShoppingCart = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 };

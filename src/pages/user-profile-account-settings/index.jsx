@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Breadcrumb from '../../components/ui/Breadcrumb';
 import Icon from '../../components/AppIcon';
@@ -9,8 +10,17 @@ import NotificationPreferencesSection from './components/NotificationPreferences
 import AccountSecuritySection from './components/AccountSecuritySection';
 
 const UserProfileAccountSettings = () => {
-  const [activeSection, setActiveSection] = useState('personal');
+  const [searchParams] = useSearchParams();
+  const initialSection = searchParams.get('section') || 'personal';
+  const [activeSection, setActiveSection] = useState(initialSection);
   const [profileCompletion] = useState(85);
+
+  useEffect(() => {
+    const section = searchParams.get('section');
+    if (section && sidebarItems.some(item => item.key === section)) {
+      setActiveSection(section);
+    }
+  }, [searchParams]);
 
   const sidebarItems = [
     { key: 'personal', label: 'Personal Information', icon: 'User' },

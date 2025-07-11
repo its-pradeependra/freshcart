@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Header from '../../components/ui/Header';
-
+import Footer from '../../components/ui/Footer';
 import Button from '../../components/ui/Button';
 import FilterChip from './components/FilterChip';
 import SortDropdown from './components/SortDropdown';
-
 import FilterSidebar from './components/FilterSidebar';
 import ProductGrid from './components/ProductGrid';
 import CategoryBreadcrumb from './components/CategoryBreadcrumb';
+import Icon from '../../components/AppIcon';
 
 const ProductCategoriesBrowse = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -250,61 +250,62 @@ const ProductCategoriesBrowse = () => {
 
     // Filter by category
     if (category) {
-      filtered = filtered.filter(product => 
-        product.category.toLowerCase() === category.toLowerCase()
-      );
+      filtered = filtered.filter(product => product.category === category);
     }
-
+    
     // Filter by subcategory
     if (subcategory) {
-      filtered = filtered.filter(product => 
-        product.subcategory.toLowerCase() === subcategory.toLowerCase()
-      );
+      filtered = filtered.filter(product => product.subcategory === subcategory);
     }
 
-    // Apply filters
-    if (filters.priceRange.min) {
+    // Filter by price range
+    if (filters.priceRange.min !== '') {
       filtered = filtered.filter(product => product.price >= parseFloat(filters.priceRange.min));
     }
-    if (filters.priceRange.max) {
+    if (filters.priceRange.max !== '') {
       filtered = filtered.filter(product => product.price <= parseFloat(filters.priceRange.max));
     }
+
+    // Filter by brands
     if (filters.brands.length > 0) {
       filtered = filtered.filter(product => filters.brands.includes(product.brand));
     }
-    if (filters.dietary.length > 0) {
+
+    // Filter by dietary preferences
+    if (filters.dietary.includes('organic')) {
+      filtered = filtered.filter(product => product.isOrganic);
+    }
+
+    // Filter by rating
+    if (filters.rating.length > 0) {
       filtered = filtered.filter(product => {
-        if (filters.dietary.includes('organic') && !product.isOrganic) return false;
-        return true;
+        return filters.rating.some(rating => {
+          const minRating = parseInt(rating);
+          return product.rating >= minRating && product.rating < minRating + 1;
+        });
       });
     }
-    if (filters.rating.length > 0) {
-      const minRating = Math.min(...filters.rating);
-      filtered = filtered.filter(product => product.rating >= minRating);
-    }
+
+    // Filter by in stock
     if (filters.inStock) {
       filtered = filtered.filter(product => product.inStock);
     }
 
-    // Apply sorting
+    // Sort products
     switch (currentSort) {
-      case 'price-low':
+      case 'price_low':
         filtered.sort((a, b) => a.price - b.price);
         break;
-      case 'price-high':
+      case 'price_high':
         filtered.sort((a, b) => b.price - a.price);
         break;
       case 'rating':
         filtered.sort((a, b) => b.rating - a.rating);
         break;
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
+      case 'discount':
+        filtered.sort((a, b) => b.discount - a.discount);
         break;
-      case 'newest':
-        filtered.sort((a, b) => b.id - a.id);
-        break;
-      default:
-        // relevance - keep original order
+      default: // relevance - keep original order
         break;
     }
 
@@ -312,8 +313,8 @@ const ProductCategoriesBrowse = () => {
   }, [products, filters, currentSort, category, subcategory]);
 
   const handleFilterChange = (filterType, value) => {
-    setFilters(prev => ({
-      ...prev,
+    setFilters(prevFilters => ({
+      ...prevFilters,
       [filterType]: value
     }));
   };
@@ -326,147 +327,182 @@ const ProductCategoriesBrowse = () => {
       rating: [],
       inStock: false
     });
+    
+    // Clear category and subcategory from URL
     setSearchParams({});
   };
 
-  const handleAddToCart = async (product) => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('Added to cart:', product);
-  };
-
-  const handleAddToWishlist = (product, isAdding) => {
-    console.log(isAdding ? 'Added to wishlist:' : 'Removed from wishlist:', product);
-  };
-
   const getActiveFilters = () => {
-    const activeFilters = [];
+    const active = [];
     
-    if (filters.priceRange.min || filters.priceRange.max) {
-      const min = filters.priceRange.min || '0';
-      const max = filters.priceRange.max || '∞';
-      activeFilters.push({
-        label: `$${min} - $${max}`,
-        onRemove: () => handleFilterChange('priceRange', { min: '', max: '' })
-      });
+    if (category) {
+      active.push({ type: 'category', value: category });
+    }
+    
+    if (subcategory) {
+      active.push({ type: 'subcategory', value: subcategory });
+    }
+    
+    if (filters.priceRange.min !== '' || filters.priceRange.max !== '') {
+      const priceLabel = `$${filters.priceRange.min || '0'} - $${filters.priceRange.max || '∞'}`;
+      active.push({ type: 'price', value: priceLabel });
     }
     
     filters.brands.forEach(brand => {
-      activeFilters.push({
-        label: brand,
-        onRemove: () => handleFilterChange('brands', filters.brands.filter(b => b !== brand))
-      });
+      active.push({ type: 'brand', value: brand });
     });
     
     filters.dietary.forEach(diet => {
-      activeFilters.push({
-        label: diet.charAt(0).toUpperCase() + diet.slice(1),
-        onRemove: () => handleFilterChange('dietary', filters.dietary.filter(d => d !== diet))
-      });
+      active.push({ type: 'dietary', value: diet });
     });
     
     filters.rating.forEach(rating => {
-      activeFilters.push({
-        label: `${rating}+ Stars`,
-        onRemove: () => handleFilterChange('rating', filters.rating.filter(r => r !== rating))
-      });
+      active.push({ type: 'rating', value: `${rating}+ Stars` });
     });
     
     if (filters.inStock) {
-      activeFilters.push({
-        label: 'In Stock',
-        onRemove: () => handleFilterChange('inStock', false)
-      });
+      active.push({ type: 'inStock', value: 'In Stock Only' });
     }
     
-    return activeFilters;
+    return active;
+  };
+
+  const handleRemoveFilter = (type, value) => {
+    switch (type) {
+      case 'category':
+        setSearchParams(params => {
+          params.delete('category');
+          return params;
+        });
+        break;
+      case 'subcategory':
+        setSearchParams(params => {
+          params.delete('subcategory');
+          return params;
+        });
+        break;
+      case 'price':
+        setFilters(prev => ({
+          ...prev,
+          priceRange: { min: '', max: '' }
+        }));
+        break;
+      case 'brand':
+        setFilters(prev => ({
+          ...prev,
+          brands: prev.brands.filter(brand => brand !== value)
+        }));
+        break;
+      case 'dietary':
+        setFilters(prev => ({
+          ...prev,
+          dietary: prev.dietary.filter(diet => diet !== value)
+        }));
+        break;
+      case 'rating':
+        setFilters(prev => ({
+          ...prev,
+          rating: prev.rating.filter(r => r !== value.split('+')[0])
+        }));
+        break;
+      case 'inStock':
+        setFilters(prev => ({
+          ...prev,
+          inStock: false
+        }));
+        break;
+      default:
+        break;
+    }
   };
 
   const activeFilters = getActiveFilters();
+  const hasActiveFilters = activeFilters.length > 0;
+  const availableBrands = [...new Set(products.map(product => product.brand))];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow">
         <CategoryBreadcrumb category={category} subcategory={subcategory} />
         
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Desktop Sidebar */}
-          <div className="hidden lg:block w-80 flex-shrink-0">
-            <div className="sticky top-24">
-              <FilterSidebar
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onClearAll={handleClearAllFilters}
-                isVisible={true}
-                onClose={() => {}}
-              />
-            </div>
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar - Desktop */}
+          <div className="hidden lg:block w-64 flex-shrink-0">
+            <FilterSidebar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              availableBrands={availableBrands}
+            />
           </div>
-
+          
           {/* Main Content */}
           <div className="flex-1">
-            {/* Mobile Filter Button */}
-            <div className="lg:hidden mb-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsFilterSidebarOpen(true)}
-                iconName="Filter"
-                iconPosition="left"
-              >
-                Filters {activeFilters.length > 0 && `(${activeFilters.length})`}
-              </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+              <h1 className="text-2xl font-heading font-heading-bold text-text-primary mb-4 sm:mb-0">
+                {subcategory || category || 'All Products'}
+              </h1>
+              
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  iconName="SlidersHorizontal"
+                  iconPosition="left"
+                  className="lg:hidden"
+                  onClick={() => setIsFilterSidebarOpen(true)}
+                >
+                  Filters
+                </Button>
+                
+                <SortDropdown
+                  value={currentSort}
+                  onChange={setCurrentSort}
+                />
+              </div>
             </div>
-
+            
             {/* Active Filters */}
-            {activeFilters.length > 0 && (
-              <div className="mb-4">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
+            {hasActiveFilters && (
+              <div className="mb-6">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-text-secondary">Filters:</span>
                   {activeFilters.map((filter, index) => (
                     <FilterChip
                       key={index}
-                      label={filter.label}
-                      onRemove={filter.onRemove}
+                      label={filter.value}
+                      onRemove={() => handleRemoveFilter(filter.type, filter.value)}
                     />
                   ))}
+                  <button
+                    onClick={handleClearAllFilters}
+                    className="text-sm text-primary hover:underline font-body-medium"
+                  >
+                    Clear All
+                  </button>
                 </div>
-                <Button
-                  variant="text"
-                  onClick={handleClearAllFilters}
-                  iconName="X"
-                  iconPosition="left"
-                  className="text-sm"
-                >
-                  Clear all
-                </Button>
               </div>
             )}
-
-            {/* Sort and Results */}
-            <SortDropdown
-              currentSort={currentSort}
-              onSortChange={setCurrentSort}
-              resultsCount={filteredProducts.length}
-            />
-
-            {/* Product Grid */}
+            
+            {/* Products Grid */}
             <ProductGrid
               products={filteredProducts}
-              onAddToCart={handleAddToCart}
-              onAddToWishlist={handleAddToWishlist}
               loading={loading}
             />
           </div>
         </div>
-      </div>
-
+      </main>
+      
+      <Footer />
+      
       {/* Mobile Filter Sidebar */}
       <FilterSidebar
         filters={filters}
         onFilterChange={handleFilterChange}
-        onClearAll={handleClearAllFilters}
-        isVisible={isFilterSidebarOpen}
+        availableBrands={availableBrands}
+        isMobile
+        isOpen={isFilterSidebarOpen}
         onClose={() => setIsFilterSidebarOpen(false)}
       />
     </div>
